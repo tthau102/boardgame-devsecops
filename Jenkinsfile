@@ -39,18 +39,18 @@ pipeline {
       steps {
         sh 'mvn test'
       }
-      post {
-          always {
-              junit '**/target/surefire-reports/*.xml'
-              jacoco execPattern: '**/target/jacoco.exec'
-          }
-          success {
-              echo '✅ All tests passed'
-          }
-          failure {
-              echo '❌ Tests failed - check reports'
-          }
-      }
+      // post {
+      //     always {
+      //         junit '**/target/surefire-reports/*.xml'
+      //         jacoco execPattern: '**/target/jacoco.exec'
+      //     }
+      //     success {
+      //         echo '✅ All tests passed'
+      //     }
+      //     failure {
+      //         echo '❌ Tests failed - check reports'
+      //     }
+      // }
     }
   }
 
