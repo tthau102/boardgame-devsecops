@@ -26,7 +26,6 @@ pipeline {
 
           # Clean Build
           ./mvnw clean package -DskipTests
-
           # Verify JAR created
           ls -lh target/*.jar
         '''
