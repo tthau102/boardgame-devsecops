@@ -1,5 +1,10 @@
 pipeline {
-  agent any
+  agent {
+    docker {
+      image 'maven:3.8.5-openjdk-11'
+      args '-v $HOME/.m2/root/.m2'
+    }
+  }
 
   environment {
     HARBOR_REGISTRY = 'harbor.server.thweb.click'
@@ -19,16 +24,7 @@ pipeline {
 
     stage('Build Maven') {
       steps {
-        sh '''
-          # Show Java/Maven version
-          java -version
-          ./mvnw --version
-
-          # Clean Build
-          ./mvnw clean package -DskipTests
-          # Verify JAR created
-          ls -lh target/*.jar
-        '''
+        sh 'mvn clean package -DskipTests'
       }
     }
   }
