@@ -25,8 +25,32 @@ pipeline {
         }
       }
       steps {
-        echo "Build Maven with Agent Docker"
         sh 'mvn clean package -DskipTests'
+      }
+    }
+  }
+
+    stage('Test') {
+      agent {
+        docker {
+          image 'maven:3.8.5-openjdk-11'
+          args '-v $HOME/.m2/root/.m2'
+        }
+      }
+      steps {
+        sh 'mvn test'
+      }
+      post {
+          always {
+              junit '**/target/surefire-reports/*.xml'
+              jacoco execPattern: '**/target/jacoco.exec'
+          }
+          success {
+              echo '✅ All tests passed'
+          }
+          failure {
+              echo '❌ Tests failed - check reports'
+          }
       }
     }
   }
