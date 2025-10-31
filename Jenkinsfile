@@ -28,7 +28,6 @@ pipeline {
         sh 'mvn clean package -DskipTests'
       }
     }
-  }
 
     stage('Test') {
       agent {
@@ -53,6 +52,7 @@ pipeline {
           }
       }
     }
+  }
 
 
   post {
