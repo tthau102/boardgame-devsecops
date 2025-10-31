@@ -19,7 +19,17 @@ pipeline {
 
     stage('Build Maven') {
       steps {
-        sh './mvnw clean package -DskipTests'
+        sh '''
+          # Show Java/Maven version
+          java -version
+          ./mvnw --version
+
+          # Clean Build
+          ./mvnw clean package -DskipTests
+
+          # Verify JAR created
+          ls -lh target/*.jar
+        '''
       }
     }
   }
