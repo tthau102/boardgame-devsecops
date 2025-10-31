@@ -39,7 +39,7 @@ pipeline {
     }
     always {
       echo '🧹 Cleaning workspace'
-      cleanWs()
+      // cleanWs()
     }
   }
 }
