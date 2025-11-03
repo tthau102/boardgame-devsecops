@@ -49,7 +49,7 @@ pipeline {
       agent {
         docker {
           image 'aquasec/trivy:latest'
-          args '--entrypoint="" -v /tmp/trivy-cache:/root/.cache'
+          args '--entrypoint="" -e XDG_CACHE_HOME=/tmp/trivy-cache -v /tmp/trivy-cache:/tmp/trivy-cache'
         }
       }
       steps {
