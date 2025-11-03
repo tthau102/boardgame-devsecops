@@ -55,15 +55,15 @@ pipeline {
       steps {
         sh 'trivy fs --format table -o trivy-fs.html .'
       }
-      // post {
-      //   always {
-      //     publishHTML ([
-      //       reportDir: '.',
-      //       reportFiles: 'trivy-fs.html',
-      //       reportName: 'Trivy FS Report'
-      //     ])
-      //   }
-      // }
+      post {
+        always {
+          publishHTML ([
+            reportDir: '.',
+            reportFiles: 'trivy-fs.html',
+            reportName: 'Trivy FS Report'
+          ])
+        }
+      }
     }
   }
 
