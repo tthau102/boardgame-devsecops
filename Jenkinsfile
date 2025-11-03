@@ -93,12 +93,13 @@ pipeline {
       }
 
       steps {
-        withSonarQubeEnv('SonarQube') {
+        withSonarQubeEnv('SONAR_USER_HOME') {
           sh 'sonar-scanner'
         }
       }
 
     }
+    
   }
 
   post {
