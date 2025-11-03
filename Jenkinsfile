@@ -93,9 +93,10 @@ pipeline {
       }
 
       steps {
-        withSonarQubeEnv('SONAR_USER_HOME') {
-          sh 'sonar-scanner'
-        }
+        // withSonarQubeEnv('SonarQube') {
+        //   sh 'sonar-scanner'
+        // }
+        sh 'sonar-scanner'
       }
 
     }
