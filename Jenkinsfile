@@ -45,7 +45,7 @@ pipeline {
       }
     }
 
-    stage('Trivy FS Scan')
+    stage('Trivy FS Scan') {
       agent {
         docker {
           image 'aquasec/trivy:latest'
