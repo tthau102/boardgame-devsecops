@@ -55,46 +55,56 @@ pipeline {
 
     }
 
-    stage('Trivy FS Scan') {
-
-      agent {
-        docker {
-          image 'aquasec/trivy:latest'
-          args '--entrypoint="" -v /tmp/trivy-cache:/.cache'
-        }
-      }
-
+    stage('SonarQube Analysis') {
       steps {
-        sh 'trivy fs --format table -o trivy-fs.html .'
-      }
-
-      post {
-        always {
-          publishHTML ([
-            reportDir: '.',
-            reportFiles: 'trivy-fs.html',
-            reportName: 'Trivy FS Report'
-          ])
+        script {
+          def scannerHome = tool 'SonarQubeScanner'
+          withSonarQubeEnv('SonarQube') {
+            sh """
+              ${scannerHome}/bin/sonar-scanner \
+                -Dsonar.projectKey=boardgame \
+                -Dsonar.sources=src/main/java \
+                -Dsonar.java.binaries=target/classes \
+                -Dsonar.junit.reportPaths=target/surefire-reports
+            """
+          }
         }
       }
-
     }
 
-    stage('SonarQube') {
-        agent {
-            docker { image 'sonarsource/sonar-scanner-cli:latest' }
+    stage('Quality Gate') {
+      steps {
+        timeout(time: 5, unit: 'MINUTES') {
+          waitForQualityGate abortPipeline: true
         }
-        environment {
-            SONAR_USER_HOME = "${WORKSPACE}/.sonar"
-        }
-        steps {
-            withSonarQubeEnv('SONAR_USER_HOME') {
-                sh 'sonar-scanner'
-            }
-        }
+      }
     }
-    
-  }
+
+  //   stage('Trivy FS Scan') {
+
+  //     agent {
+  //       docker {
+  //         image 'aquasec/trivy:latest'
+  //         args '--entrypoint="" -v /tmp/trivy-cache:/.cache'
+  //       }
+  //     }
+
+  //     steps {
+  //       sh 'trivy fs --format table -o trivy-fs.html .'
+  //     }
+
+  //     post {
+  //       always {
+  //         publishHTML ([
+  //           reportDir: '.',
+  //           reportFiles: 'trivy-fs.html',
+  //           reportName: 'Trivy FS Report'
+  //         ])
+  //       }
+  //     }
+
+  //   }
+  // }
 
   post {
     success {
