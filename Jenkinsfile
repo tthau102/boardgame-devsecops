@@ -88,30 +88,30 @@ pipeline {
       }
     }
 
-  //   stage('Trivy FS Scan') {
+    stage('Trivy FS Scan') {
 
-  //     agent {
-  //       docker {
-  //         image 'aquasec/trivy:latest'
-  //         args '--entrypoint="" -v /tmp/trivy-cache:/.cache'
-  //       }
-  //     }
+      agent {
+        docker {
+          image 'aquasec/trivy:latest'
+          args '--entrypoint="" -v /tmp/trivy-cache:/.cache'
+        }
+      }
 
-  //     steps {
-  //       sh 'trivy fs --format table -o trivy-fs.html .'
-  //     }
+      steps {
+        sh 'trivy fs --format table -o trivy-fs.html .'
+      }
 
-  //     post {
-  //       always {
-  //         publishHTML ([
-  //           reportDir: '.',
-  //           reportFiles: 'trivy-fs.html',
-  //           reportName: 'Trivy FS Report'
-  //         ])
-  //       }
-  //     }
+      post {
+        always {
+          publishHTML ([
+            reportDir: '.',
+            reportFiles: 'trivy-fs.html',
+            reportName: 'Trivy FS Report'
+          ])
+        }
+      }
 
-  //   }
+    }
   }
 
   post {
