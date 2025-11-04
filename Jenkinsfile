@@ -63,7 +63,7 @@ pipeline {
         }
       }
       environment {
-        SONAR_HOST_URL = 'http://sonarqube.internal:9000'
+        SONAR_HOST_URL = 'http://sonarqube.server.thweb.click:9000'
         SONAR_TOKEN = credentials('sonarqube-token')
       }
       steps {
