@@ -77,7 +77,7 @@ pipeline {
       agent {
         docker {
           image "sonarsource/sonar-scanner-cli:latest"
-          args "-v ${SONAR_CACHE}:/opt/sonar-scanner/.sonar"
+          args ' -u $(id -u jenkins):$(id -g jenkins) -v ${SONAR_CACHE}:/opt/sonar-scanner/.sonar'
         }
       }
 
@@ -110,10 +110,7 @@ pipeline {
       agent {
         docker {
           image "aquasec/trivy:latest"
-          args """
-            --entrypoint="" -u $(id -u jenkins):$(id -g jenkins) \
-            -v ${TRIVY_CACHE}:/.cache
-          """
+          args '--entrypoint="" -u $(id -u jenkins):$(id -g jenkins) -v ${TRIVY_CACHE}:/.cache'
         }
       }
 
