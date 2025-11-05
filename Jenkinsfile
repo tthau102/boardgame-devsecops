@@ -21,8 +21,8 @@ pipeline {
     // Trivy Config
 
     // SonarQube Config
-    SONAR_HOST_URL = "http://sonarqube.internal:9000"
-    SONAR_TOKEN = credentials("sonarqube-token")
+    // SONAR_HOST_URL = "http://sonarqube.internal:9000"
+    // SONAR_TOKEN = credentials("sonarqube-token")
     
   }
 
@@ -32,8 +32,11 @@ pipeline {
       steps {
         echo "Set up"
         sh """
-          mkdir -p ${CACHE_BASE} ${TRIVY_CACHE}
+          mkdir -p ${MAVEN_CACHE} ${TRIVY_CACHE} ${SONAR_CACHE}
           chmod -R 775 ${CACHE_BASE}
+
+          #Cleanup old images (keep last 5)
+          docker image prune -a -f --filter "until=168h" || true
         """
       }
     }
@@ -53,6 +56,7 @@ pipeline {
         docker {
           image "maven:3.8.5-openjdk-11"
           args "-v ${MAVEN_CACHE}:/root/.m2"
+          reuseNode true
         }
       }
       
@@ -68,6 +72,7 @@ pipeline {
       agent {
         docker {
           image "maven:3.8.5-openjdk-11"
+          reuseNode true
         }
       }
 
@@ -89,6 +94,7 @@ pipeline {
         docker {
           image "sonarsource/sonar-scanner-cli:latest"
           args "-v ${SONAR_CACHE}:/opt/sonar-scanner/.sonar"
+          reuseNode true
         }
       }
 
