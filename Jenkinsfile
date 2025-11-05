@@ -161,10 +161,10 @@ pipeline {
         echo "Build Docker Image"
         sh """
           docker build \
-            # --label commit,build number, build user if needed \
             -t ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${IMAGE_NAME}:${IMAGE_TAG} \
             -t ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${IMAGE_NAME}:latest \
             .
+            # --label commit,build number, build user if needed \
         """
       }
 
