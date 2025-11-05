@@ -160,7 +160,7 @@ pipeline {
       steps {
         echo "Build Docker Image"
         sh """
-          docker build \ 
+          docker build \
             -f Dockerfile-jenkins-optimize \
             -t ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${IMAGE_NAME}:${IMAGE_TAG} \
             -t ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${IMAGE_NAME}:latest \
@@ -230,7 +230,11 @@ pipeline {
     stage("Deploy to K8s") {
       steps {
         sh """
-          kubectl app
+          kubectl set image deployment/boardgame \
+            boardgame=${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${IMAGE_NAME}:${IMAGE_TAG} \
+            -n boardgame
+
+          kubectl rollout status deployment/boardgame -n boardgame --timeout=5m
         """
       }
     }
@@ -242,7 +246,7 @@ pipeline {
     success {
       echo "✅ Pipeline completed succesfully!!"
       echo "🧹 Cleaning workspace"
-      cleanWs()
+      // cleanWs()
     }
 
     failure {
