@@ -193,7 +193,6 @@ pipeline {
             --severity HIGH,CRITICAL \
             --format table \
             -o trivy-image.html \
-            # --exit-code 1     if needed
             ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${IMAGE_NAME}:${IMAGE_TAG}
         """
 
@@ -209,6 +208,22 @@ pipeline {
         }
       }
 
+    }
+
+    stage("Push to Registry") {
+      steps {
+        echo "Push to Harbor"
+        sh """
+          echo \${HARBOR_CRED_PSW} | docker login ${HARBOR_REGISTRY} \
+            -u \${HARBOR_CREDS_USR} \
+            --password-stdin
+
+          docker push ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${IMAGE_NAME}:${IMAGE_TAG}
+          docker push ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${IMAGE_NAME}:latest
+
+          docker logout ${HARBOR_REGISTRY}
+        """
+      }
     }
 
   }
