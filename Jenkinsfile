@@ -193,6 +193,7 @@ pipeline {
             --severity HIGH,CRITICAL \
             --format table \
             -o trivy-image.html \
+            # --exit-code 1     if needed
             ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${IMAGE_NAME}:${IMAGE_TAG}
         """
 
