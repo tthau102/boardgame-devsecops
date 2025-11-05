@@ -27,6 +27,21 @@ pipeline {
 
   stages {
 
+    stage("Prepare Cache folder") {
+      echo "Set up cache folder"
+      sh """
+        mkdir -p ${CACHE_BASE}
+        
+        mkdir -p ${TRIVY_CACHE}
+        chmod 775 ${TRIVY_CACHE}
+
+        mkdir -p ${SONAR_CACHE}
+        chmod 775 ${SONAR_CACHE}
+
+        sudo chown -R jenkins:jenkins ${CACHE_BASE}
+      """
+    }
+
     stage("Checkout") {
 
       steps {
@@ -77,7 +92,7 @@ pipeline {
       agent {
         docker {
           image "sonarsource/sonar-scanner-cli:latest"
-          args ' -u $(id -u jenkins):$(id -g jenkins) -v ${SONAR_CACHE}:/opt/sonar-scanner/.sonar'
+          args '-v ${SONAR_CACHE}:/opt/sonar-scanner/.sonar'
         }
       }
 
@@ -110,7 +125,7 @@ pipeline {
       agent {
         docker {
           image "aquasec/trivy:latest"
-          args '--entrypoint="" -u $(id -u jenkins):$(id -g jenkins) -v ${TRIVY_CACHE}:/.cache'
+          args '--entrypoint=""  -v ${TRIVY_CACHE}:/.cache'
         }
       }
 
@@ -147,7 +162,7 @@ pipeline {
       agent {
         docker {
           image "aquasec/trivy:latest"
-          args '--entrypoint="" -u $(id -u jenkins):$(id -g jenkins) -v /var/run/docker.sock:/var/run/docker.sock -v ${TRIVY_CACHE}:/.cache'
+          args '--entrypoint="" -v /var/run/docker.sock:/var/run/docker.sock -v ${TRIVY_CACHE}:/.cache'
         }
       }
 
