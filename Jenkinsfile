@@ -20,7 +20,7 @@ pipeline {
 
     // Trivy Config
 
-    // SonarQube Config
+    // SonarQube Config || Config on Jenkins UI -> System -> SonarQube Server
     // SONAR_HOST_URL = "http://sonarqube.internal:9000"
     // SONAR_TOKEN = credentials("sonarqube-token")
     
@@ -89,7 +89,7 @@ pipeline {
 
     }
 
-    stage("SonarQube Analysis") {
+    stage("Code Quality - SonarQube") {
       agent {
         docker {
           image "sonarsource/sonar-scanner-cli:latest"
@@ -125,13 +125,22 @@ pipeline {
       agent {
         docker {
           image "aquasec/trivy:latest"
-          args "--entrypoint=\"\"  -v ${TRIVY_CACHE}:/.cache"
+          args """
+            --entrypoint=''  
+            -v ${TRIVY_CACHE}:/home/scanner/.cache
+          """
         }
       }
 
       steps {
         echo "Trivy FileSystem Scan"
-        sh "trivy fs --format table -o trivy-fs.html ."
+        sh """
+          trivy fs \
+          --cache-dir /home/scanner/.cache \
+          --format table \ 
+          -o trivy-fs.html \
+          .
+        """
       }
 
       post {
