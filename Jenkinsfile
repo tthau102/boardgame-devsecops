@@ -119,12 +119,13 @@ pipeline {
     }
 
     stage('Build Docker Image') {
-      step {
+      steps {
         sh """
         docker build -t ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${IMAGE_NAME}:${IMAGE_TAG} .
         """
       }
     }
+
   }
 
   post {
