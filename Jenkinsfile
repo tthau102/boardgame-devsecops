@@ -39,7 +39,7 @@ pipeline {
           mkdir -p ${SONAR_CACHE}
           chmod 775 ${SONAR_CACHE}
 
-          sudo chown -R jenkins:jenkins ${CACHE_BASE}
+          chown -R jenkins:jenkins ${CACHE_BASE}
         """
       }
     }
