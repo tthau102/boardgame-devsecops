@@ -4,83 +4,94 @@ pipeline {
   environment {
 
     // Image Config
-    IMAGE_NAME = 'boardgame'
-    IMAGE_TAG = '${BUILD_NUMBER}'
+    IMAGE_NAME = "app"
+    IMAGE_TAG = "${env.GIT_COMMIT?.take(7) ?: 'latest'}"
+
+    // Cache
+    CACHE_BASE = "/var/lib/jenkins/cache"
 
     // Harbor Config
-    HARBOR_REGISTRY = 'harbor.server.thweb.click'
-    HARBOR_PROJECT = 'boardgame-devsecops'
-    HARBOR_CREDS = credentials('jenkins-harbor-credentials')
+    HARBOR_REGISTRY = "harbor.server.thweb.click"
+    HARBOR_PROJECT = "boardgame-devsecops"
+    HARBOR_CREDS = credentials("jenkins-harbor-credentials")
 
     // Trivy Config
-    TRIVY_CACHE = '/tmp/jenkins/trivy-cache'
+    TRIVY_CACHE = "${CACHE_BASE}/trivy-cache"
 
     // SonarQube Config
-    SONAR_HOST_URL = 'http://sonarqube.internal:9000'
-    SONAR_TOKEN = credentials('sonarqube-token')
-    SONAR_CACHE = "/tmp/jenkins/sonar-cache"
+    SONAR_HOST_URL = "http://sonarqube.internal:9000"
+    SONAR_TOKEN = credentials("sonarqube-token")
+    SONAR_CACHE = "${CACHE_BASE}/sonar-cache"
     
   }
 
   stages {
 
-    stage('Checkout') {
+    stage("Prepare caches") {
+      steps {
+        sh """
+          mkdir -r ${TRIV}
+        """
+      }
+    }
+
+    stage("Checkout") {
 
       steps {
-        echo '📥 Checking out code from GitLab...'
+        echo "📥 Checking out code from GitLab..."
         checkout scm
       }
 
     }
 
-    stage('Build Maven') {
+    stage("Build Maven") {
 
       agent {
         docker {
-          image 'maven:3.8.5-openjdk-11'
-          args '-v $HOME/.m2:/root/.m2'
+          image "maven:3.8.5-openjdk-11"
+          args "-v $HOME/.m2:/root/.m2"
         }
       }
       
       steps {
-        echo 'Build Maven from inside docker'
-        sh 'mvn clean package -DskipTests'
+        echo "Build Maven from inside docker"
+        sh "mvn clean package -DskipTests"
       }
 
     }
 
-    stage('Test') {
+    stage("Test") {
 
       agent {
         docker {
-          image 'maven:3.8.5-openjdk-11'
+          image "maven:3.8.5-openjdk-11"
         }
       }
 
       steps {
-        echo 'Test Maven from inside docker'
-        sh 'mvn test'
+        echo "Test Maven from inside docker"
+        sh "mvn test"
       }
 
       post {
         always {
-          junit '**/target/surefire-reports/*.xml'
+          junit "**/target/surefire-reports/*.xml"
         }
       }
 
     }
 
-    stage('SonarQube Analysis') {
+    stage("SonarQube Analysis") {
       agent {
         docker {
-          image 'sonarsource/sonar-scanner-cli:latest'
-          args '-v ${SONAR_CACHE}:/opt/sonar-scanner/.sonar'
+          image "sonarsource/sonar-scanner-cli:latest"
+          args "-v ${SONAR_CACHE}:/opt/sonar-scanner/.sonar"
         }
       }
 
       steps {
-        echo 'SonarQube Analysis'
-        withSonarQubeEnv('SonarQube') {
+        echo "SonarQube Analysis"
+        withSonarQubeEnv("SonarQube") {
           sh """
             sonar-scanner \
               -Dsonar.projectKey=boardgame \
@@ -93,42 +104,42 @@ pipeline {
       }
     }
 
-    stage('Quality Gate') {
+    stage("Quality Gate") {
       steps {
-        echo 'Wait for QualityGate trigger webhook'
-        timeout(time: 5, unit: 'MINUTES') {
+        echo "Wait for QualityGate trigger webhook"
+        timeout(time: 5, unit: "MINUTES") {
           waitForQualityGate abortPipeline: true
         }
       }
     }
 
-    stage('Trivy FS Scan') {
+    stage("Trivy FS Scan") {
 
       agent {
         docker {
-          image 'aquasec/trivy:latest'
-          args '--entrypoint="" -v ${TRIVY_CACHE}:/.cache'
+          image "aquasec/trivy:latest"
+          args "--entrypoint="" -v ${TRIVY_CACHE}:/.cache"
         }
       }
 
       steps {
-        echo 'Trivy FileSystem Scan'
-        sh 'trivy fs --format table -o trivy-fs.html .'
+        echo "Trivy FileSystem Scan"
+        sh "trivy fs --format table -o trivy-fs.html ."
       }
 
       post {
         always {
           publishHTML ([
-            reportDir: '.',
-            reportFiles: 'trivy-fs.html',
-            reportName: 'Trivy FS Report'
+            reportDir: ".",
+            reportFiles: "trivy-fs.html",
+            reportName: "Trivy FS Report"
           ])
         }
       }
 
     }
 
-    stage('Build Docker Image') {
+    stage("Build Docker Image") {
 
       steps {
         echo "Build Docker Image"
@@ -139,11 +150,11 @@ pipeline {
 
     }
 
-    stage('Trivy Image Scan') {
+    stage("Trivy Image Scan") {
 
       agent {
         docker {
-          image 'aquasec/trivy:latest'
+          image "aquasec/trivy:latest"
           args """
             --entrypoint="" 
             -v /var/run/docker.sock:/var/run/docker.sock 
@@ -171,13 +182,13 @@ pipeline {
 
   post {
     success {
-      echo '✅ Pipeline completed succesfully!!'
+      echo "✅ Pipeline completed succesfully!!"
     }
     failure {
       echo "❌ Pipeline failed"
     }
     always {
-      echo '🧹 Cleaning workspace'
+      echo "🧹 Cleaning workspace"
       cleanWs()
     }
   }
