@@ -182,6 +182,7 @@ pipeline {
       echo "❌ Pipeline failed"
     }
     always {
+      echo "THE END"
     }
   }
 }
