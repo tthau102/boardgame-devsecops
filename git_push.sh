@@ -20,6 +20,7 @@ if [[ $confirm != "y" && $confirm != "Y" ]]; then
     exit 0
 fi
 
+echo "------------------------------------------"
 # Perform git operations
 git add .
 git commit -m "$datenow"
