@@ -13,11 +13,14 @@ echo "Remote repositories:"
 git remote -v | grep push
 
 echo ""
-read -p "Push to all remotes? (y/n): " confirm
-
-if [[ $confirm != "y" && $confirm != "Y" ]]; then
-    echo "Push cancelled"
-    exit 0
+if [[ -n "$1" && "$1" == "-y" ]]; then
+  confirm="y"
+else 
+  read -p "Push to all remotes? (y/n): " confirm
+  if [[ $confirm != "y" && $confirm != "Y" ]]; then
+      echo "Push cancelled"
+      exit 0
+  fi
 fi
 
 echo "------------------------------------------"
