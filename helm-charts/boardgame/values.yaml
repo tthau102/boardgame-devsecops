@@ -1,59 +1,109 @@
-# Global settings
-replicaCount: 2
+# ============================================================
+# BASE CONFIGURATION - SHARED ACROSS ALL ENVIRONMENTS
+# ============================================================
+# This file contains sensible defaults that work in most cases.
+# Environment-specific values are in values-{env}.yaml files.
 
+# ============================================================
+# IMAGE CONFIGURATION
+# ============================================================
 image:
+  # Docker image repository
   repository: harbor.server.thweb.click/boardgame-devsecops/app
+  
+  # Image tag - typically overridden by CI/CD with commit SHA
+  # Default to 'latest' for manual deployments
+  tag: latest
+  
+  # Pull policy
   pullPolicy: Always
-  tag: "latest"
 
+# Image pull secrets for private registry
 imagePullSecrets:
   - name: harbor-registry
 
-service:
-  type: ClusterIP
-  port: 80
-  targetPort: 8080
+# ============================================================
+# DEPLOYMENT CONFIGURATION
+# ============================================================
+# Number of pod replicas
+# Override per environment: dev=1, prod=3
+replicaCount: 2
 
-ingress:
-  enabled: true
-  className: nginx
-  annotations:
-    cert-manager.io/cluster-issuer: 'letsencrypt-prod'
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
-  hosts:
-    - host: boardgame.app.thweb.click  # Override per env
-      paths:
-        - path: /
-          pathType: Prefix
-  tls:
-    - secretName: boardgame-tls
-      hosts:
-        - boardgame.app.thweb.click
+# Resource limits and requests
+# These are baseline values - adjust per environment
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi
 
-# Application configs
+# Liveness probe - checks if container is alive
+livenessProbe:
+  httpGet:
+    path: /
+    port: 8080
+  initialDelaySeconds: 45
+  periodSeconds: 10
+
+# Readiness probe - checks if container is ready to serve traffic
+readinessProbe:
+  httpGet:
+    path: /
+    port: 8080
+  initialDelaySeconds: 30
+  periodSeconds: 5
+
+# ============================================================
+# APPLICATION ENVIRONMENT VARIABLES
+# ============================================================
 env:
+  # Spring Boot datasource URL
+  # H2 in-memory DB for development (stateless)
   springDatasourceUrl: "jdbc:h2:mem:testdb"
+  
+  # H2 Console - override to "false" in production
   springH2ConsoleEnabled: "true"
 
-# Default resources (will be overridden per env)
-resources:
-  requests:
-    memory: "256Mi"
-    cpu: "100m"
-  limits:
-    memory: "512Mi"
-    cpu: "500m"
+# ============================================================
+# SERVICE CONFIGURATION
+# ============================================================
+service:
+  # Service type (ClusterIP for internal access via Ingress)
+  type: ClusterIP
+  
+  # Service port (external)
+  port: 80
+  
+  # Target port (container port)
+  targetPort: 8080
 
-probes:
-  liveness:
-    httpGet:
-      path: /
-      port: 8080
-    initialDelaySeconds: 45
-    periodSeconds: 10
-  readiness:
-    httpGet:
-      path: /
-      port: 8080
-    initialDelaySeconds: 30
-    periodSeconds: 5
+# ============================================================
+# INGRESS CONFIGURATION
+# ============================================================
+ingress:
+  # Enable ingress
+  enabled: true
+  
+  # Ingress class
+  className: nginx
+  
+  # Hostname - MUST override per environment
+  host: boardgame.app.thweb.click
+  
+  # TLS configuration
+  tls:
+    # Enable TLS/SSL
+    enabled: true
+    
+    # Secret name for TLS certificate
+    secretName: boardgame-tls
+  
+  # Ingress annotations
+  annotations:
+    # cert-manager will provision certificate
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    
+    # Force HTTPS redirect
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"

@@ -1,17 +1,15 @@
 apiVersion: v2
-name: boardgame
+appVersion: 0.0.7
 description: A Helm chart for Kubernetes
-
+keywords:
+- boardgame
+- spring-boot
+- devsecops
+maintainers:
+- email: trunghautran0102@gmail.com
+  name: trunghau.tran
+name: boardgame
+sources:
+- https://github.com/tthau0102/boardgame-devsecops
 type: application
 version: 0.1.0
-appVersion: "0.0.7"
-
-maintainers:
-  - name: trunghau.tran  
-    email: trunghautran0102@gmail.com
-keywords:
-  - boardgame
-  - spring-boot
-  - devsecops
-sources:
-  - https://github.com/tthau0102/boardgame-devsecops

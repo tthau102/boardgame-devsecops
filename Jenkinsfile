@@ -231,13 +231,40 @@ pipeline {
 
     stage("Deploy to K8s") {
       steps {
-        sh """
-          kubectl set image deployment/boardgame-release \
-            boardgame=${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${IMAGE_NAME}:${IMAGE_TAG} \
-            -n boardgame
+        scripts {
+          // Determine environment based on branch
+          def environment = 'dev'
+          def namespace = 'boardgame-dev'
+          def valuesFile = 'values-dev.yaml'
 
-          kubectl rollout status deployment/boardgame-release -n boardgame --timeout=5m
-        """
+          if (env.BRANCH_NAME == 'main' || env.BRANCH_NAME == 'master') {
+            environment = 'prod'
+            namespace = 'boardgame'
+            valuesFile = 'values-prod.yaml'
+          }
+
+          echo "Deploying to ${environment} environment (namespace: ${namespace})"
+
+          // Deploy with Helm
+          sh """
+            helm upgrade --install boardgame-${environment} helm-charts/boardgame \
+              -f helm-charts/boardgame/values.yaml \
+              -f helm-charts/boardgame/${valueFile} \
+              --namespace ${namespace} \
+              --create-namespace
+              --set image.tag=${IMAGE_TAG} \
+              --atomic \
+              --timeout 5m \
+              --wait
+          """
+
+          echo "✅ Deployed ${environment} successfully!"
+
+          sh """
+            helm list -n ${namespace}
+            kubectl get pods -n ${namespace}
+          """
+        }
       }
     }
 
@@ -252,7 +279,8 @@ pipeline {
     }
 
     failure {
-      echo "❌ Pipeline failed"
+      echo "❌ Deployment failed! Helm will automatically rollback."
+      sh "helm history boardgame-${environment} -n ${namespace}"
     }
 
     always {
