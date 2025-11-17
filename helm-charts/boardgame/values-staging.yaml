@@ -12,7 +12,7 @@ environment: staging
 # ============================================================
 # DEPLOYMENT - HA setup with more resources
 # ============================================================
-replicaCount: 3         # High availability (spread across nodes)
+replicaCount: 0        # High availability (spread across nodes)
 
 resources:
   limits:
