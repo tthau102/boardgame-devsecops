@@ -31,6 +31,7 @@ pipeline {
 
     stage("Set up") {
       steps {
+        echo "BRANCH_NAME: ${env.BRANCH_NAME}"
         echo "Set up"
         sh """
           mkdir -p ${MAVEN_CACHE} ${TRIVY_CACHE} ${SONAR_CACHE}
@@ -294,7 +295,7 @@ pipeline {
     failure {
       script {
         echo "❌ Deployment failed! Helm will automatically rollback."
-        
+
       }
     }
 
