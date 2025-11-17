@@ -51,183 +51,183 @@ pipeline {
 
     }
 
-    // stage("Build Maven") {
+    stage("Build Maven") {
 
-    //   agent {
-    //     docker {
-    //       image "maven:3.8.5-openjdk-11"
-    //       args "-v ${MAVEN_CACHE}:/root/.m2"
-    //       reuseNode true
-    //     }
-    //   }
+      agent {
+        docker {
+          image "maven:3.8.5-openjdk-11"
+          args "-v ${MAVEN_CACHE}:/root/.m2"
+          reuseNode true
+        }
+      }
       
-    //   steps {
-    //     echo "Build Maven from inside docker"
-    //     sh "mvn clean package -DskipTests"
-    //   }
+      steps {
+        echo "Build Maven from inside docker"
+        sh "mvn clean package -DskipTests"
+      }
 
-    // }
+    }
 
-    // stage("Test") {
+    stage("Test") {
 
-    //   agent {
-    //     docker {
-    //       image "maven:3.8.5-openjdk-11"
-    //       reuseNode true
-    //     }
-    //   }
+      agent {
+        docker {
+          image "maven:3.8.5-openjdk-11"
+          reuseNode true
+        }
+      }
 
-    //   steps {
-    //     echo "Test Maven from inside docker"
-    //     sh "mvn test"
-    //   }
+      steps {
+        echo "Test Maven from inside docker"
+        sh "mvn test"
+      }
 
-    //   post {
-    //     always {
-    //       junit "**/target/surefire-reports/*.xml"
-    //     }
-    //   }
+      post {
+        always {
+          junit "**/target/surefire-reports/*.xml"
+        }
+      }
 
-    // }
+    }
 
-    // stage("Code Quality - SonarQube") {
-    //   agent {
-    //     docker {
-    //       image "sonarsource/sonar-scanner-cli:latest"
-    //       args "-v ${SONAR_CACHE}:/opt/sonar-scanner/.sonar"
-    //       reuseNode true
-    //     }
-    //   }
+    stage("Code Quality - SonarQube") {
+      agent {
+        docker {
+          image "sonarsource/sonar-scanner-cli:latest"
+          args "-v ${SONAR_CACHE}:/opt/sonar-scanner/.sonar"
+          reuseNode true
+        }
+      }
 
-    //   steps {
-    //     echo "Running  SonarQube Analysis"
-    //     withSonarQubeEnv("SonarQube") {
-    //       sh """
-    //         sonar-scanner \
-    //           -Dsonar.projectKey=boardgame \
-    //           -Dsonar.sources=src/main/java \
-    //           -Dsonar.java.binaries=target/classes \
-    //       """
-    //     }
-    //   }
-    // }
+      steps {
+        echo "Running  SonarQube Analysis"
+        withSonarQubeEnv("SonarQube") {
+          sh """
+            sonar-scanner \
+              -Dsonar.projectKey=boardgame \
+              -Dsonar.sources=src/main/java \
+              -Dsonar.java.binaries=target/classes \
+          """
+        }
+      }
+    }
 
-    // stage("Quality Gate") {
-    //   steps {
-    //     echo "Wait for QualityGate trigger webhook"
-    //     timeout(time: 5, unit: "MINUTES") {
-    //       waitForQualityGate abortPipeline: true
-    //     }
-    //   }
-    // }
+    stage("Quality Gate") {
+      steps {
+        echo "Wait for QualityGate trigger webhook"
+        timeout(time: 5, unit: "MINUTES") {
+          waitForQualityGate abortPipeline: true
+        }
+      }
+    }
 
-    // stage("Security Scan - FS") {
+    stage("Security Scan - FS") {
 
-    //   agent {
-    //     docker {
-    //       image "aquasec/trivy:latest"
-    //       args """
-    //         --entrypoint=''  
-    //         -v ${TRIVY_CACHE}:/home/scanner/.cache
-    //       """
-    //     }
-    //   }
+      agent {
+        docker {
+          image "aquasec/trivy:latest"
+          args """
+            --entrypoint=''  
+            -v ${TRIVY_CACHE}:/home/scanner/.cache
+          """
+        }
+      }
 
-    //   steps {
-    //     echo "Scanning filesystem"
-    //     sh """
-    //       trivy fs \
-    //         --cache-dir /home/scanner/.cache \
-    //         --format table \
-    //         -o trivy-fs.html \
-    //         .
-    //     """
-    //   }
+      steps {
+        echo "Scanning filesystem"
+        sh """
+          trivy fs \
+            --cache-dir /home/scanner/.cache \
+            --format table \
+            -o trivy-fs.html \
+            .
+        """
+      }
 
-    //   post {
-    //     always {
-    //       publishHTML ([
-    //         reportDir: ".",
-    //         reportFiles: "trivy-fs.html",
-    //         reportName: "Trivy FS Report"
-    //       ])
-    //     }
-    //   }
+      post {
+        always {
+          publishHTML ([
+            reportDir: ".",
+            reportFiles: "trivy-fs.html",
+            reportName: "Trivy FS Report"
+          ])
+        }
+      }
 
-    // }
+    }
 
-    // stage("Build Docker Image") {
+    stage("Build Docker Image") {
 
-    //   steps {
-    //     echo "Build Docker Image"
-    //     sh """
-    //       docker build \
-    //         -f Dockerfile-jenkins-optimize \
-    //         -t ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${IMAGE_NAME}:${IMAGE_TAG} \
-    //         -t ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${IMAGE_NAME}:latest \
-    //         .
-    //         # --label commit,build number, build user if needed \
-    //     """
-    //   }
+      steps {
+        echo "Build Docker Image"
+        sh """
+          docker build \
+            -f Dockerfile-jenkins-optimize \
+            -t ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${IMAGE_NAME}:${IMAGE_TAG} \
+            -t ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${IMAGE_NAME}:latest \
+            .
+            # --label commit,build number, build user if needed \
+        """
+      }
 
-    // }
+    }
 
-    // stage("Security Scan - Image") {
+    stage("Security Scan - Image") {
 
-    //   agent {
-    //     docker {
-    //       image "aquasec/trivy:latest"
-    //       args """
-    //         --entrypoint='' \
-    //         --group-add 999 \
-    //         -v /var/run/docker.sock:/var/run/docker.sock:ro \
-    //         -v ${TRIVY_CACHE}:/home/scanner/.cache
-    //       """
-    //     }
-    //   }
+      agent {
+        docker {
+          image "aquasec/trivy:latest"
+          args """
+            --entrypoint='' \
+            --group-add 999 \
+            -v /var/run/docker.sock:/var/run/docker.sock:ro \
+            -v ${TRIVY_CACHE}:/home/scanner/.cache
+          """
+        }
+      }
 
-    //   steps {
+      steps {
 
-    //     echo "Trivy Image Scan from inside docker with docker.socket mount"
-    //     sh """
-    //       trivy image \
-    //         --cache-dir /home/scanner/.cache \
-    //         --severity HIGH,CRITICAL \
-    //         --format table \
-    //         -o trivy-image.html \
-    //         ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${IMAGE_NAME}:${IMAGE_TAG}
-    //     """
+        echo "Trivy Image Scan from inside docker with docker.socket mount"
+        sh """
+          trivy image \
+            --cache-dir /home/scanner/.cache \
+            --severity HIGH,CRITICAL \
+            --format table \
+            -o trivy-image.html \
+            ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${IMAGE_NAME}:${IMAGE_TAG}
+        """
 
-    //   }
+      }
 
-    //   post {
-    //     always {
-    //       publishHTML([
-    //         reportDir: '.',
-    //         reportFiles: 'trivy-image.html',
-    //         reportName: 'Trivy Image Report'
-    //       ])
-    //     }
-    //   }
+      post {
+        always {
+          publishHTML([
+            reportDir: '.',
+            reportFiles: 'trivy-image.html',
+            reportName: 'Trivy Image Report'
+          ])
+        }
+      }
 
-    // }
+    }
 
-    // stage("Push to Registry") {
-    //   steps {
-    //     echo "Push to Harbor"
-    //     sh """
-    //       echo "${HARBOR_CREDS_PSW}" | docker login ${HARBOR_REGISTRY} \
-    //         -u ${HARBOR_CREDS_USR} \
-    //         --password-stdin
+    stage("Push to Registry") {
+      steps {
+        echo "Push to Harbor"
+        sh """
+          echo "${HARBOR_CREDS_PSW}" | docker login ${HARBOR_REGISTRY} \
+            -u ${HARBOR_CREDS_USR} \
+            --password-stdin
 
-    //       docker push ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${IMAGE_NAME}:${IMAGE_TAG}
-    //       docker push ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${IMAGE_NAME}:latest
+          docker push ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${IMAGE_NAME}:${IMAGE_TAG}
+          docker push ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${IMAGE_NAME}:latest
 
-    //       docker logout ${HARBOR_REGISTRY}
-    //     """
-    //   }
+          docker logout ${HARBOR_REGISTRY}
+        """
+      }
       
-    // }
+    }
 
     stage("Deploy to K8s") {
       steps {
