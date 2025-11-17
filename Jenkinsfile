@@ -237,7 +237,7 @@ pipeline {
           
           //GIT_BRANCH
           def gitBranch = env.GIT_BRANCH ?: ''
-          def branchName = gitBranch.replaceAll()
+          def branchName = gitBranch.replaceAll('^.*/([^/]+)$', '$1')
 
           echo "=== Branch Detection ==="
           echo "GIT_BRANCH: ${gitBranch}"
