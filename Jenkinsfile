@@ -16,15 +16,13 @@ pipeline {
 
     // Keep last 10 builds only
     buildDiscarder(logRotator(numToKeepStr: '10'))
-    
-    // Skip checkout if nothing changed
-    skipDefaultCheckout()
+  
     
     // Retry on agent failure
     retry(2)
 
   }
-  
+
 
   environment {
 
