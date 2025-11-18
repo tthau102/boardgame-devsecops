@@ -325,8 +325,7 @@ pipeline {
 
     success {
       echo "✅ Pipeline completed succesfully!!"
-      echo "🧹 Cleaning workspace"
-      cleanWs()
+
     }
 
     failure {
@@ -337,6 +336,8 @@ pipeline {
     }
 
     always {
+      echo "🧹 Cleaning workspace"
+      cleanWs()
       echo "=== THE END ==="
     }
 
