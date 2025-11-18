@@ -12,7 +12,7 @@ environment: prod
 # ============================================================
 # DEPLOYMENT - HA setup with more resources
 # ============================================================
-replicaCount: 5         # High availability (spread across nodes)
+replicaCount: 3         # High availability (spread across nodes)
 
 resources:
   limits:
