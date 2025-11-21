@@ -258,47 +258,45 @@ pipeline {
     stage("Update GitOps Repo") {
       steps {
         script {
-          echo "Updating GitOps repository..."
+          echo "🔄 Updating GitOps repository..."
 
-          //Determine environment from branch
           def environment = 'dev'
-          def namespace = 'boardgame-dev'
-
           if (env.BRANCH_NAME == 'main' || env.BRANCH_NAME == 'master') {
             environment = 'prod'
-            namespace = 'boardgame'
           }
 
-          echo "Deploying to ${environment} environment"
+          echo "Target environment: ${environment}"
 
-          sh '''
-            # Clone GitOps repo
-            rm -rf gitops-repo
-            git clone ${GITOPS_REPO} gitops-repo
-            cd gitops-repo
+          withCredentials([usernamePassword(
+            credentialsId: 'jenkins-gitops-write-project-token',
+            usernameVariable: 'GIT_USER',
+            passwordVariable: 'GIT_TOKEN'
+          )]) {
+            sh """
+              rm -rf gitops-repo
+              git clone https://${GIT_USER}:${GIT_TOKEN}@gitlab.server.thweb.click/thweb102/boardgame-gitops.git gitops-repo
+              cd gitops-repo
 
-            # Configure git
-            git config user.email "jenkins@thweb.click"
-            git config user.name "${GITOPS_CREDS_USR}"
+              git config user.email "jenkins@thweb.click"
+              git config user.name "Jenkins CI"
 
-            # Update image tag
-            sed -i 's|tag: .*|tag: "${IMAGE_TAG}"|' apps/${environment}/values-override.yaml
+              sed -i 's|tag: .*|tag: "${IMAGE_TAG}"|' apps/${environment}/values-override.yaml
 
-            # Commit and push
-            git add apps/${environment}/values-override.yaml
-            git commit -m "Update ${environment} image to ${IMAGE_TAG}
-Build: ${BUILD_NUMBER}
-Commit: ${GIT_COMMIT}
-Branch: ${BRANCH_NAME}"
-            
-            # Push using project token
-            git push https://"${GITOPS_CREDS_USR}":$"{GITOPS_CREDS_PSW}"@gitlab.server.thweb.click/thweb102/boardgame-gitops.git main
+              git add apps/${environment}/values-override.yaml
+              git commit -m "Update ${environment} to ${IMAGE_TAG}
 
-            cd ..
-            rm -rf gitops-repo
-          '''
+    Build: ${BUILD_NUMBER}
+    Commit: ${GIT_COMMIT}
+    Branch: ${BRANCH_NAME}"
+              
+              git push origin main
 
-        echo "GitOps repo updated! ArgoCD will sync within 3 minutes"
+              cd ..
+              rm -rf gitops-repo
+            """
+          }
+
+          echo "✅ GitOps repo updated!"
         }
       }
     }
