@@ -274,7 +274,7 @@ pipeline {
           sh '''
             # Clone GitOps repo
             rm -rf gitops-repo
-            git clone ${GITIPS_REPO} gitops-repo
+            git clone ${GITOPS_REPO} gitops-repo
             cd gitops-repo
 
             # Configure git
